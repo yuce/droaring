@@ -1,0 +1,16 @@
+{
+	"name": "roaring",
+	"authors": [
+		"Yuce Tekol"
+	],
+	"description": "Roaring Bitmaps for D",
+	"copyright": "Copyright © 2018, Yuce Tekol",
+	"license": "Apache 2.0",
+	"importPaths": [
+		"."
+	],
+	"libs": [
+		"roaring"
+	],
+	"lflags": ["-Lextlib/x86_64-linux-gnu"]
+}
