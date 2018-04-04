@@ -18,7 +18,7 @@ class Roaring {
         PARAMS
             uint cap: The predefined capacity
     */
-    this(uint cap) {
+    this(const uint cap) {
         this(roaring_bitmap_create_with_capacity(cap));
     }
 
@@ -26,17 +26,17 @@ class Roaring {
         this.roaring = r;
     }
 
-    static Roaring bitmapOf(uint[] args ...) {
+    static Roaring bitmapOf(const uint[] args ...) {
         return Roaring.fromArray(args);
     }
 
-    static Roaring fromArray(uint[] bits) {
+    static Roaring fromArray(const uint[] bits) {
         Roaring r = new Roaring(cast(uint)bits.length);
         roaring_bitmap_add_many(r.roaring, bits.length, bits.ptr);
         return r;
     }
 
-    static Roaring fromRange(ulong min, ulong max, uint step) {
+    static Roaring fromRange(const ulong min, const ulong max, const uint step) {
         auto rr = roaring_bitmap_from_range(min, max, step);
         return new Roaring(rr);
     }
@@ -65,7 +65,7 @@ class Roaring {
         return a[];
     }
 
-    void add(uint x) {
+    void add(const uint x) {
         roaring_bitmap_add(this.roaring, x);
     }
 
@@ -73,14 +73,14 @@ class Roaring {
      * Remove value x
      *
      */
-    void remove(uint x) {
+    void remove(const uint x) {
         roaring_bitmap_remove(this.roaring, x);
     }
 
     /**
      * Check if value x is present
      */
-    bool contains(uint x) const {
+    bool contains(const uint x) const {
         return roaring_bitmap_contains(this.roaring, x);
     }
 
@@ -114,11 +114,11 @@ class Roaring {
     /**
     * Returns the number of integers that are smaller or equal to x.
     */
-    ulong rank(uint rank) const {
+    ulong rank(const uint rank) const {
         return roaring_bitmap_rank(this.roaring, rank);
     }
 
-    bool select(uint rank, out uint elem) const {
+    bool select(const uint rank, out uint elem) const {
         return roaring_bitmap_select(this.roaring, rank, &elem);
     }
 
@@ -141,7 +141,16 @@ class Roaring {
         return buf[0..size];
     }
 
-    Roaring opBinary(const string op)(const Roaring b) const {
+    void opOpAssign(const string op)(const uint x)
+    if (op == "|" || op == "-")
+    {
+        static if (op == "|") roaring_bitmap_add(this.roaring, x);
+        else static if (op == "-") roaring_bitmap_remove(this.roaring, x);
+    }
+
+    Roaring opBinary(const string op)(const Roaring b) const
+    if (op == "&" || op == "|")
+    {
         roaring_bitmap_t *result;
         static if (op == "&") result = roaring_bitmap_and(this.roaring, b.roaring);
         else static if (op == "|") result = roaring_bitmap_or(this.roaring, b.roaring);
@@ -150,7 +159,7 @@ class Roaring {
         return new Roaring(result);
     }
 
-    override bool opEquals(Object b) {
+    override bool opEquals(const Object b) {
         import std.stdio : writeln;
         if (this is b) return true;
         if (b is null) return false;
@@ -160,19 +169,13 @@ class Roaring {
         return false;
     }
 
-    bool opEquals(Roaring b) {
-        import std.stdio : writeln;
-        return roaring_bitmap_equals(this.roaring, b.roaring);
-    }
-
     private roaring_bitmap_t* roaring;
 }
 
 unittest {
-    void test_construct(bool copyOnWrite) {
+    void test_add_remove() {
         // create new empty bitmap
         Roaring r1 = new Roaring;
-        r1.copyOnWrite = copyOnWrite;
         // add values
         foreach (i; 100 .. 1000) {
             r1.add(i);
@@ -181,6 +184,21 @@ unittest {
         assert(r1.contains(500));
         // check the number of bits
         assert(r1.cardinality == 900);
+
+        r1 |= 9999;
+        assert(r1.contains(9999));
+        assert(r1.cardinality == 901);
+
+        r1.remove(150);
+        assert(!r1.contains(150));
+
+        r1 -= 555;
+        assert(!r1.contains(555));
+    }
+
+    void test_optimize(bool copyOnWrite) {
+        auto r1 = Roaring.bitmapOf(5, 1, 2, 3, 5, 6);
+        r1.copyOnWrite = copyOnWrite;
         //check optimization
         auto size1 = r1.sizeInBytes;
         r1.optimize;
@@ -251,12 +269,13 @@ unittest {
         assert(r1 == r2);
     }
     
+    test_add_remove();
     test_bitmapOf();
-    test_construct(false);
-    test_construct(true);
     test_equals();
     test_intersect();
     test_minimum_maximum();
+    test_optimize(true);
+    test_optimize(false);
     test_rank();
     test_select();
     test_toArray();
