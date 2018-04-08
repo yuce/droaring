@@ -1,4 +1,5 @@
 <a href="https://travis-ci.org/yuce/droaring"><img src="https://api.travis-ci.org/yuce/droaring.svg?branch=master"></a>
+<a href='https://coveralls.io/github/yuce/droaring?branch=master'><img src='https://coveralls.io/repos/github/yuce/droaring/badge.svg?branch=master' alt='Coverage Status' /></a>
 
 <img src="https://github.com/yuce/yuce.github.io/blob/master/roaring.jpg" style="float: right" align="right" height="256" width="256">
 
