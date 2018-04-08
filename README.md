@@ -1,3 +1,5 @@
+<a href="https://travis-ci.org/yuce/droaring"><img src="https://api.travis-ci.org/yuce/droaring.svg?branch=master"></a>
+
 # Experimental D Roaring Bitmaps Library
 
 **EARLY RELEASE**
@@ -11,7 +13,7 @@ This library wraps [CRoaring](https://github.com/RoaringBitmap/CRoaring).
 
 ## Requirements
 
-* A recent D compiler. Tested with DMD v2.079.0 and LDC 1.8.0.
+* A recent D compiler. Tested with DMD v2.079.0, LDC 1.8.0 and v2.068.2_gcc6.
 * Requirements for CRoaring (including a C compiler).
 * Tested on Linux, FreeBSD and MacOS.
 
