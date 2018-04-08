@@ -13,6 +13,13 @@ Roaring bitmapOf(const uint[] bits)
     return Roaring.fromArray(bits);
 }
 
+Roaring bitmapOf(T)(T rng)
+{
+    auto r = new Roaring;
+    foreach (bit; rng) r.add(bit);
+    return r;
+}
+
 Roaring readBitmap(const char[] buf)
 {
     return Roaring.read(buf);
@@ -21,6 +28,50 @@ Roaring readBitmap(const char[] buf)
 char[] writeBitmap(const Roaring r)
 {
     return r.write();
+}
+
+BitRange range(const Roaring r)
+{
+    return new BitRange(r.bitmap);
+}
+
+class BitRange
+{
+    @nogc @property @safe
+    bool empty() const pure
+    {
+        return !this.it || !this.it.has_value;
+    }
+
+    @nogc @property @safe
+    uint front() const pure
+    {
+        return this.it.current_value;
+    }
+
+    @nogc
+    void popFront()
+    {
+        if (it.has_value) roaring_advance_uint32_iterator(this.it);
+        else {
+            roaring_free_uint32_iterator(this.it);
+            this.it = null;
+        }
+    }
+
+    @nogc
+    private this(const roaring_bitmap_t *bmp)
+    {
+        this.it = roaring_create_iterator(bmp);
+    }
+
+    @nogc
+    private ~this()
+    {
+        if (this.it) roaring_free_uint32_iterator(this.it);
+    }
+
+    private roaring_uint32_iterator_t *it;
 }
 
 class Roaring
@@ -331,6 +382,9 @@ unittest
         assert(r.contains(5));
         assert(r.length == 5);
         assert(bitmapOf([1, 2, 3, 5, 6]) == r);
+
+        import std.range : iota;
+        assert(bitmapOf(0, 1, 2, 3) == bitmapOf(4.iota));
     }
 
     void test_minimum_maximum()
@@ -470,6 +524,12 @@ unittest
         }
     }
 
+    void test_bitRange()
+    {
+        import std.algorithm : filter, sum;
+        assert(6 == bitmapOf(1, 2, 3, 4, 5).range.filter!(a => a % 2 == 0).sum);
+    }    
+
     void test_readme()
     {
         import std.stdio : writefln, writeln;
@@ -483,10 +543,14 @@ unittest
 
         // create from an array
         auto ra = bitmapOf([1, 2, 3]);
+
+        // create from a range
+        import std.range : iota;
+        assert(bitmapOf(0, 1, 2, 3) == bitmapOf(4.iota));
         
         // create a new roaring bitmap instance from some numbers
         auto r2 = bitmapOf(1, 3, 5, 15);
-        
+
         // check whether a value is contained
         assert(r2.contains(5));
         assert(5 in r2); // r2 contains 5
@@ -510,11 +574,11 @@ unittest
 
         // iterate on a bitmap
         const r3 = bitmapOf(1, 5, 10, 20);
-        ulong sum = 0;
+        ulong s = 0;
         foreach (bit; r3) {
-            sum += bit;
+            s += bit;
         }
-        assert(sum == 36);
+        assert(s == 36);
 
         // iterate on a bitmap and index
         foreach(i, bit; r3) {
@@ -545,10 +609,17 @@ unittest
         writeln("Bitmap: ", r6);
         import std.conv : to;
         assert("{0, 10, 20, 30, 40, 50}" == to!string(r6));
+
+        // the bit range!
+        import std.algorithm : filter, sum;
+        import roaring.roaring : range, BitRange;
+        // sum of bits in r6 which are bit % 20==0
+        assert(60 == r6.range.filter!(b => b % 20 == 0).sum);
     }
 
     test_add_remove();
     test_bitmapOf();
+    test_bitRange();
     test_equals();
     test_index();
     test_intersect();

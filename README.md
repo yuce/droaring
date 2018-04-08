@@ -59,10 +59,14 @@ void main()
 
     // create from an array
     auto ra = bitmapOf([1, 2, 3]);
+
+    // create from a range
+    import std.range : iota;
+    assert(bitmapOf(0, 1, 2, 3) == bitmapOf(4.iota));
     
     // create a new roaring bitmap instance from some numbers
     auto r2 = bitmapOf(1, 3, 5, 15);
-    
+
     // check whether a value is contained
     assert(r2.contains(5));
     assert(5 in r2); // r2 contains 5
@@ -86,11 +90,11 @@ void main()
 
     // iterate on a bitmap
     const r3 = bitmapOf(1, 5, 10, 20);
-    ulong sum = 0;
+    ulong s = 0;
     foreach (bit; r3) {
-        sum += bit;
+        s += bit;
     }
-    assert(sum == 36);
+    assert(s == 36);
 
     // iterate on a bitmap and index
     foreach(i, bit; r3) {
@@ -121,6 +125,12 @@ void main()
     writeln("Bitmap: ", r6);
     import std.conv : to;
     assert("{0, 10, 20, 30, 40, 50}" == to!string(r6));
+
+    // the bit range!
+    import std.algorithm : filter, sum;
+    import roaring.roaring : range, BitRange;
+    // sum of bits in r6 which are bit % 20==0
+    assert(60 == r6.range.filter!(b => b % 20 == 0).sum);
 }
 ```
 

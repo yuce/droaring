@@ -128,9 +128,6 @@ uint32_t roaring_bitmap_minimum(const roaring_bitmap_t *bm) pure;
  */
 roaring_bitmap_t *roaring_bitmap_or(const roaring_bitmap_t *x1, const roaring_bitmap_t *x2);
 
-void roaring_bitmap_printf(const roaring_bitmap_t *ra);
-void roaring_bitmap_printf_describe(const roaring_bitmap_t *ra);
-
 /**
 * roaring_bitmap_rank returns the number of integers that are smaller or equal
 * to x.
@@ -202,6 +199,7 @@ void roaring_bitmap_to_uint32_array(const roaring_bitmap_t *ra, uint32_t *ans);
 * The new value is in it->current_value. Values are traversed in increasing
 * orders. For convenience, returns it->has_value.
 */
+@nogc
 bool roaring_advance_uint32_iterator(roaring_uint32_iterator_t *it);
 
 /**
@@ -213,9 +211,11 @@ bool roaring_advance_uint32_iterator(roaring_uint32_iterator_t *it);
 *
 * This function calls roaring_init_iterator.
 */
+@nogc
 roaring_uint32_iterator_t *roaring_create_iterator(const roaring_bitmap_t *ra);
 
 /**
 * Free memory following roaring_create_iterator
 */
+@nogc
 void roaring_free_uint32_iterator(roaring_uint32_iterator_t *it);
