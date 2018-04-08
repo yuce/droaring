@@ -60,9 +60,9 @@ class Roaring
     }
 
     @property
-    ulong cardinality() const
+    size_t cardinality() const
     {
-        return roaring_bitmap_get_cardinality(this.bitmap);
+        return cast(size_t)roaring_bitmap_get_cardinality(this.bitmap);
     }
     @property
     void copyOnWrite(bool enable)
@@ -151,7 +151,7 @@ class Roaring
     char[] write(const bool portable = true) const
     {
         char[] buf;
-        ulong size;
+        size_t size;
         if (portable) {
             buf = new char[roaring_bitmap_portable_size_in_bytes(this.bitmap)];
             size = roaring_bitmap_portable_serialize(this.bitmap, buf.ptr);
