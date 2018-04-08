@@ -26,7 +26,7 @@ Add `roaring` to your DUB dependencies.
 Assuming you've built the library and `$DROARING_HOME` points to the DRoaring directory:
 
 ```
-dmd your_source.d -L-L$DROARING_HOME -L-lroaring -I$DROARING_HOME/source
+dmd your_source.d $ROARING_HOME/ext/roaring.o -L-L$DROARING_HOME -L-lroaring -I$DROARING_HOME/source
 ```
 
 ## Example
