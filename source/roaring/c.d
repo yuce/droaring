@@ -17,6 +17,29 @@ struct roaring_bitmap_t {
     bool copy_on_write;
 }
 
+struct roaring_uint32_iterator_t {
+    const roaring_bitmap_t *parent;  // owner
+    int32_t container_index;         // point to the current container index
+    int32_t in_container_index;  // for bitset and array container, this is out
+                                 // index
+    int32_t run_index;           // for run container, this points  at the run
+    uint32_t in_run_index;  // within a run, this is our index (points at the
+                            // end of the current run)
+
+    uint32_t current_value;
+    bool has_value;
+
+    const void *container;  // should be:
+                     // parent->high_low_container.containers[container_index];
+    uint8_t typecode;  // should be:
+                       // parent->high_low_container.typecodes[container_index];
+    uint32_t highbits;  // should be:
+                        // parent->high_low_container.keys[container_index]) <<
+                        // 16;
+}
+
+extern(C) alias roaring_iterator = bool function(uint32_t value, void* param);
+
 void roaring_bitmap_add(roaring_bitmap_t *r, uint32_t x);
 
 /**
@@ -37,6 +60,11 @@ roaring_bitmap_t *roaring_bitmap_and(const roaring_bitmap_t *x1, const roaring_b
 bool roaring_bitmap_contains(const roaring_bitmap_t *r, uint32_t val);
 roaring_bitmap_t *roaring_bitmap_create();
 roaring_bitmap_t *roaring_bitmap_create_with_capacity(uint32_t cap);
+
+/**
+ * Return true if all the elements of ra1 are also in ra2.
+ */
+bool roaring_bitmap_is_subset(const roaring_bitmap_t *ra1, const roaring_bitmap_t *ra2);
 
 /**
  * read a bitmap from a serialized version. This is meant to be compatible with
@@ -146,3 +174,26 @@ size_t roaring_bitmap_size_in_bytes(const roaring_bitmap_t *ra);
  *   * sizeof(uint32_t))
  */
 void roaring_bitmap_to_uint32_array(const roaring_bitmap_t *ra, uint32_t *ans);
+
+/**
+* Advance the iterator. If there is a new value, then it->has_value is true.
+* The new value is in it->current_value. Values are traversed in increasing
+* orders. For convenience, returns it->has_value.
+*/
+bool roaring_advance_uint32_iterator(roaring_uint32_iterator_t *it);
+
+/**
+* Create an iterator object that can be used to iterate through the
+* values. Caller is responsible for calling roaring_free_iterator.
+* The iterator is initialized. If there is a  value, then it->has_value is true.
+* The first value is in it->current_value. The iterator traverses the values
+* in increasing order.
+*
+* This function calls roaring_init_iterator.
+*/
+roaring_uint32_iterator_t *roaring_create_iterator(const roaring_bitmap_t *ra);
+
+/**
+* Free memory following roaring_create_iterator
+*/
+void roaring_free_uint32_iterator(roaring_uint32_iterator_t *it);

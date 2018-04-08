@@ -1,16 +1,20 @@
 {
 	"name": "roaring",
+	"homepage": "https://github.com/yuce/droaring",
 	"authors": [
-		"Yuce Tekol"
+		"Yüce Tekol"
 	],
 	"description": "Roaring Bitmaps for D",
-	"copyright": "Copyright © 2018, Yuce Tekol",
-	"license": "Apache 2.0",
-	"importPaths": [
-		"."
+	"copyright": "Copyright © 2018, Yüce Tekol",
+	"license": "Apache-2.0",
+	"targetType": "library",
+	"targetName": "roaring",
+	"importPaths": ["source"],
+	"sourceFiles-posix": ["$PACKAGE_DIR/ext/roaring.o"],
+	"preBuildCommands-posix": [
+		"cc -c -o $PACKAGE_DIR/ext/roaring.o $PACKAGE_DIR/ext/roaring.c"
 	],
-	"libs": [
-		"roaring"
-	],
-	"lflags": ["-Lextlib/x86_64-linux-gnu"]
+	"postBuildCommands-posix": [
+		"ar rcs $PACKAGE_DIR/libroaring.a $PACKAGE_DIR/ext/roaring.o"
+	]
 }

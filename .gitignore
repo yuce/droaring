@@ -5,7 +5,7 @@ docs/
 roaring.so
 roaring.dylib
 roaring.dll
-roaring.a
+libroaring.a
 roaring.lib
 roaring-test-*
 *.exe
