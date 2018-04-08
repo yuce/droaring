@@ -7,7 +7,7 @@ build: ext/roaring.o source/roaring/roaring.d source/roaring/c.d
 	ar rcs libroaring.a ext/roaring.o
 
 ext/roaring.o:
-	$(CC) -c -o ext/roaring.o ext/roaring.c
+	$(CC) -std=c11 -fPIC -c -o ext/roaring.o ext/roaring.c
 
 clean:
 	rm -f -- libroaring.a roaring-test-library *.lst

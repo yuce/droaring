@@ -12,6 +12,6 @@
 	"importPaths": ["source"],
 	"sourceFiles-posix": ["ext/roaring.o"],
 	"preBuildCommands-posix": [
-		"cd $PACKAGE_DIR; [ -f ext/roaring.o ] || cc -fPIC -c -o ext/roaring.o ext/roaring.c"
+		"cd $PACKAGE_DIR; [ -f ext/roaring.o ] || cc -std=c11 -fPIC -c -o ext/roaring.o ext/roaring.c"
 	]
 }
