@@ -44,7 +44,8 @@ dmd your_source.d $DROARING_HOME/ext/roaring.o -L-L$DROARING_HOME -L-lroaring -I
 ```d
 void main()
 {
-    import roaring.roaring : Roaring;
+    import std.stdio : writefln, writeln;
+    import roaring.roaring : Roaring, bitmapOf;
 
     // create a new roaring bitmap instance
     auto r1 = new Roaring;
@@ -53,10 +54,10 @@ void main()
     r1.add(5);
 
     // create from an array
-    auto ra = Roaring.fromArray([1, 2, 3]);
+    auto ra = bitmapOf([1, 2, 3]);
     
     // create a new roaring bitmap instance from some numbers
-    auto r2 = Roaring.bitmapOf(1, 3, 5, 15);
+    auto r2 = bitmapOf(1, 3, 5, 15);
     
     // check whether a value is contained
     assert(r2.contains(5));
@@ -72,33 +73,50 @@ void main()
     assert(!r2.contains(5));
     
     // compute how many bits there are:
-    assert(3, r2.cardinality);
+    assert(3 == r2.length);
 
     // check whether a bitmap is subset of another
-    const sub = Roaring.bitmapOf(1, 5);
-    const sup = Roaring.bitmapOf(1, 2, 3, 4, 5, 6);
+    const sub = bitmapOf(1, 5);
+    const sup = bitmapOf(1, 2, 3, 4, 5, 6);
     assert(sub in sup);
 
     // iterate on a bitmap
-    const r3 = Roaring.bitmapOf(1, 5, 10, 20);
+    const r3 = bitmapOf(1, 5, 10, 20);
     ulong sum = 0;
     foreach (bit; r3) {
         sum += bit;
     }
     assert(sum == 36);
 
+    // iterate on a bitmap and index
+    foreach(i, bit; r3) {
+        writefln("%d: %d", i, bit);
+    }
+
+    import roaring.roaring : readBitmap, writeBitmap;
     // serialize the bitmap
-    char[] buf = r3.write();
+    char[] buf = writeBitmap(r3);
     // deserialize from a char array
-    const r3Copy = Roaring.read(buf);
+    const r3Copy = readBitmap(buf);
     assert(r3 == r3Copy);
 
     // find the intersection of bitmaps
-    const r4 = Roaring.bitmapOf(1, 5, 6);
-    const r5 = Roaring.bitmapOf(1, 2, 3, 4, 5);
-    assert((r4 & r5) == Roaring.bitmapOf(1, 5));
+    const r4 = bitmapOf(1, 5, 6);
+    const r5 = bitmapOf(1, 2, 3, 4, 5);
+    assert((r4 & r5) == bitmapOf(1, 5));
     // find the union of bitmaps
-    assert((r4 | r5) == Roaring.bitmapOf(1, 2, 3, 4, 5, 6));
+    assert((r4 | r5) == bitmapOf(1, 2, 3, 4, 5, 6));
+
+    const r6 = bitmapOf(0, 10, 20, 30, 40, 50);
+    // get the bit for the index
+    assert(20 == r6[2]);
+    // slice a bitmap
+    assert(bitmapOf(30, 40, 50) == r6[3..$]);
+
+    // convert the bitmap to a string
+    writeln("Bitmap: ", r6);
+    import std.conv : to;
+    assert("{0, 10, 20, 30, 40, 50}" == to!string(r6));
 }
 ```
 

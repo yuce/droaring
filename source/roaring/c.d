@@ -40,6 +40,7 @@ struct roaring_uint32_iterator_t {
 
 extern(C) alias roaring_iterator = bool function(uint32_t value, void* param);
 
+@nogc @safe
 void roaring_bitmap_add(roaring_bitmap_t *r, uint32_t x);
 
 /**
@@ -57,7 +58,8 @@ void roaring_bitmap_add_many(roaring_bitmap_t *r, size_t n_args, const uint32_t 
  */
 roaring_bitmap_t *roaring_bitmap_and(const roaring_bitmap_t *x1, const roaring_bitmap_t *x2);
 
-bool roaring_bitmap_contains(const roaring_bitmap_t *r, uint32_t val);
+@nogc @safe
+bool roaring_bitmap_contains(const roaring_bitmap_t *r, uint32_t val) pure;
 roaring_bitmap_t *roaring_bitmap_create();
 roaring_bitmap_t *roaring_bitmap_create_with_capacity(uint32_t cap);
 
@@ -65,6 +67,13 @@ roaring_bitmap_t *roaring_bitmap_create_with_capacity(uint32_t cap);
  * Return true if all the elements of ra1 are also in ra2.
  */
 bool roaring_bitmap_is_subset(const roaring_bitmap_t *ra1, const roaring_bitmap_t *ra2);
+
+
+/**  use with roaring_bitmap_serialize
+* see roaring_bitmap_portable_deserialize if you want a format that's
+* compatible with Java and Go implementations
+*/
+roaring_bitmap_t *roaring_bitmap_deserialize(const void *buf);
 
 /**
  * read a bitmap from a serialized version. This is meant to be compatible with
@@ -103,9 +112,15 @@ bool roaring_bitmap_equals(const roaring_bitmap_t *ra1, const roaring_bitmap_t *
 
 void roaring_bitmap_free(roaring_bitmap_t *r);
 roaring_bitmap_t *roaring_bitmap_from_range(uint64_t min, uint64_t max, uint32_t step);
-uint64_t roaring_bitmap_get_cardinality(const roaring_bitmap_t *ra);
-uint32_t roaring_bitmap_maximum(const roaring_bitmap_t *bm);
-uint32_t roaring_bitmap_minimum(const roaring_bitmap_t *bm);
+
+@nogc @safe
+uint64_t roaring_bitmap_get_cardinality(const roaring_bitmap_t *ra) pure;
+
+@nogc @safe
+uint32_t roaring_bitmap_maximum(const roaring_bitmap_t *bm) pure;
+
+@nogc @safe
+uint32_t roaring_bitmap_minimum(const roaring_bitmap_t *bm) pure;
 
 /**
  * Computes the union between two bitmaps and returns new bitmap. The caller is
@@ -120,7 +135,8 @@ void roaring_bitmap_printf_describe(const roaring_bitmap_t *ra);
 * roaring_bitmap_rank returns the number of integers that are smaller or equal
 * to x.
 */
-uint64_t roaring_bitmap_rank(const roaring_bitmap_t *bm, uint32_t x);
+@nogc @safe
+uint64_t roaring_bitmap_rank(const roaring_bitmap_t *bm, uint32_t x) pure;
 
 /**
  * write a bitmap to a char buffer.  The output buffer should refer to at least
@@ -138,10 +154,15 @@ size_t roaring_bitmap_portable_serialize(const roaring_bitmap_t *ra, char *buf);
  * with Java and Go versions).  See format specification at
  * https://github.com/RoaringBitmap/RoaringFormatSpec
  */
-size_t roaring_bitmap_portable_size_in_bytes(const roaring_bitmap_t *ra);
+@nogc @safe
+size_t roaring_bitmap_portable_size_in_bytes(const roaring_bitmap_t *ra) pure;
 
+@nogc @safe
 void roaring_bitmap_remove(roaring_bitmap_t *r, uint32_t x);
+
+@nogc @safe
 bool roaring_bitmap_run_optimize(roaring_bitmap_t *r);
+
 bool roaring_bitmap_select(const roaring_bitmap_t *bm, uint32_t rank, uint32_t *element);
 
 /**
@@ -164,7 +185,8 @@ size_t roaring_bitmap_serialize(const roaring_bitmap_t *ra, char *buf);
  * How many bytes are required to serialize this bitmap (NOT compatible
  * with Java and Go versions)
  */
-size_t roaring_bitmap_size_in_bytes(const roaring_bitmap_t *ra);
+ @nogc @safe
+size_t roaring_bitmap_size_in_bytes(const roaring_bitmap_t *ra) pure;
 
 /**
  * Convert the bitmap to an array. Write the output to "ans",

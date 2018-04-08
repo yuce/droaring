@@ -3,6 +3,26 @@ module roaring.roaring;
 
 import roaring.c;
 
+Roaring bitmapOf(const uint[] args ...)
+{
+    return Roaring.fromArray(args);
+}
+
+Roaring bitmapOf(const uint[] bits)
+{
+    return Roaring.fromArray(bits);
+}
+
+Roaring readBitmap(const char[] buf)
+{
+    return Roaring.read(buf);
+}
+
+char[] writeBitmap(const Roaring r)
+{
+    return r.write();
+}
+
 class Roaring
 {
     /// Creates an empty bitmap
@@ -31,40 +51,43 @@ class Roaring
         this.bitmap = r;
     }
 
-    static Roaring bitmapOf(const uint[] args ...)
-    {
-        return Roaring.fromArray(args);
-    }
-
-    static Roaring fromArray(const uint[] bits)
+    private static Roaring fromArray(const uint[] bits)
     {
         Roaring r = new Roaring(cast(uint)bits.length);
         roaring_bitmap_add_many(r.bitmap, bits.length, bits.ptr);
         return r;
     }
 
-    static Roaring fromRange(const ulong min, const ulong max, const uint step)
+    private static Roaring fromRange(const ulong min, const ulong max, const uint step)
     {
         auto rr = roaring_bitmap_from_range(min, max, step);
         return new Roaring(rr);
     }
 
-    static Roaring read(const char[] buf)
+    private static Roaring read(const char[] buf)
     {
+        import core.exception : OutOfMemoryError;
         auto rr = roaring_bitmap_portable_deserialize_safe(buf.ptr, buf.length);
         if (!rr) {
-            // TODO: raise an exception
-            return null;
+            throw new OutOfMemoryError;
         }
         return new Roaring(rr);
     }
 
-    @property
-    size_t cardinality() const
+    private char[] write() const
     {
-        return cast(size_t)roaring_bitmap_get_cardinality(this.bitmap);
+        char[] buf = new char[sizeInBytes];
+        const size = roaring_bitmap_portable_serialize(this.bitmap, buf.ptr);
+        return buf[0..size];
     }
-    @property
+
+    @nogc @property @safe
+    uint length() const pure
+    {
+        return cast(uint)roaring_bitmap_get_cardinality(this.bitmap);
+    }
+
+    @nogc @property @safe
     void copyOnWrite(bool enable)
     {
         this.bitmap.copy_on_write = enable;
@@ -72,11 +95,12 @@ class Roaring
 
     uint[] toArray() const
     {
-        uint[] a = new uint[this.cardinality];
+        uint[] a = new uint[length];
         roaring_bitmap_to_uint32_array(this.bitmap, a.ptr);
         return a[];
     }
 
+    @nogc @safe
     void add(const uint x)
     {
         roaring_bitmap_add(this.bitmap, x);
@@ -86,6 +110,7 @@ class Roaring
      * Remove value x
      *
      */
+    @nogc @safe
     void remove(const uint x)
     {
         roaring_bitmap_remove(this.bitmap, x);
@@ -94,7 +119,8 @@ class Roaring
     /**
      * Check if value x is present
      */
-    bool contains(const uint x) const
+    @nogc @safe
+    bool contains(const uint x) const pure
     {
         return roaring_bitmap_contains(this.bitmap, x);
     }
@@ -103,8 +129,8 @@ class Roaring
      * Return the largest value (if not empty)
      *
      */
-    @property
-    uint maximum() const
+    @nogc @property @safe
+    uint maximum() const pure
     {
         return roaring_bitmap_maximum(this.bitmap);
     }
@@ -113,54 +139,31 @@ class Roaring
     * Return the smallest value (if not empty)
     *
     */
-    @property
-    uint minimum() const
+    @nogc @property @safe
+    uint minimum() const pure
     {
         return roaring_bitmap_minimum(this.bitmap);
     }
 
-    @property
-    size_t sizeInBytes() const
+    @nogc @property @safe
+    size_t sizeInBytes() const pure
     {
         return roaring_bitmap_portable_size_in_bytes(this.bitmap);
-    }
-
-    void printf() const
-    {
-        roaring_bitmap_printf(this.bitmap);
     }
 
     /**
     * Returns the number of integers that are smaller or equal to x.
     */
-    ulong rank(const uint rank) const
+    @nogc @safe
+    ulong rank(const uint rank) const pure
     {
         return roaring_bitmap_rank(this.bitmap, rank);
     }
 
-    bool select(const uint rank, out uint elem) const
-    {
-        return roaring_bitmap_select(this.bitmap, rank, &elem);
-    }
-
+    @nogc @safe
     bool optimize()
     {
         return roaring_bitmap_run_optimize(this.bitmap);
-    }
-
-    char[] write(const bool portable = true) const
-    {
-        char[] buf;
-        size_t size;
-        if (portable) {
-            buf = new char[roaring_bitmap_portable_size_in_bytes(this.bitmap)];
-            size = roaring_bitmap_portable_serialize(this.bitmap, buf.ptr);
-        }
-        else {
-            buf = new char[roaring_bitmap_size_in_bytes(this.bitmap)];
-            size = roaring_bitmap_serialize(this.bitmap, buf.ptr);
-        }
-        return buf[0..size];
     }
 
     int opApply(int delegate(ref uint value) dg) const
@@ -177,11 +180,21 @@ class Roaring
         return dgReturn;
     }
 
-    void opOpAssign(const string op)(const uint x)
-    if (op == "|" || op == "-")
+    // TODO: un-duplicate this method with ^^^
+    int opApply(int delegate(ref uint index, ref uint value) dg) const
     {
-        static if (op == "|") roaring_bitmap_add(this.bitmap, x);
-        else static if (op == "-") roaring_bitmap_remove(this.bitmap, x);
+        const bmp = this.bitmap;
+        auto it = roaring_create_iterator(bmp);
+        int dgReturn = 0;
+        uint index = 0;
+        while (it.has_value) {
+            dgReturn = dg(index, it.current_value);
+            if (dgReturn) break;
+            index += 1;
+            roaring_advance_uint32_iterator(it);
+        }
+        roaring_free_uint32_iterator(it);
+        return dgReturn;
     }
 
     Roaring opBinary(const string op)(const Roaring b) const
@@ -209,7 +222,38 @@ class Roaring
         else static assert(0, "Operator " ~ op ~ " not implemented.");
     }
 
-    override bool opEquals(const Object b)
+    @nogc @property @safe
+    uint opDollar() const pure
+    {
+        return length;
+    }
+
+    uint opIndex(uint rank) const
+    {
+        import core.exception : RangeError;
+        uint v;
+        if (!roaring_bitmap_select(this.bitmap, rank, &v)) {
+            throw new RangeError;
+        }
+        return v;
+    }
+
+    Roaring opSlice(int start, int end) const
+    {
+        import core.exception : RangeError;
+        if (start < 0 || start >= opDollar) {
+            throw new RangeError;
+        }
+        Roaring r = new Roaring;
+        foreach (i, bit; this) {
+            if (i < start) continue;
+            if (i >= end) break;
+            r.add(this[i]);
+        }
+        return r;
+    }
+
+    override bool opEquals(const Object b) const
     {
         import std.stdio : writeln;
         if (this is b) return true;
@@ -218,6 +262,25 @@ class Roaring
             return roaring_bitmap_equals(this.bitmap, (cast(Roaring)b).bitmap);
         }
         return false;
+    }
+
+    void opOpAssign(const string op)(const uint x)
+    if (op == "|" || op == "-")
+    {
+        static if (op == "|") roaring_bitmap_add(this.bitmap, x);
+        else static if (op == "-") roaring_bitmap_remove(this.bitmap, x);
+    }
+
+    void toString(scope void delegate(const(char)[]) sink) const
+    {
+        import std.format : format;
+        import std.range : enumerate;
+        sink("{");
+        foreach (i, bit; this) {
+            if (i == 0) sink(format("%d", bit));
+            else sink(format(", %d", bit));
+        }
+        sink("}");
     }
 
     private roaring_bitmap_t* bitmap;
@@ -239,11 +302,11 @@ unittest
         assert(109999 !in r1);
 
         // check the number of bits
-        assert(r1.cardinality == 900);
+        assert(r1.length == 900);
 
         r1 |= 9999;
         assert(r1.contains(9999));
-        assert(r1.cardinality == 901);
+        assert(r1.length == 901);
 
         r1.remove(150);
         assert(!r1.contains(150));
@@ -254,7 +317,7 @@ unittest
 
     void test_optimize(bool copyOnWrite)
     {
-        auto r1 = Roaring.bitmapOf(5, 1, 2, 3, 5, 6);
+        auto r1 = bitmapOf(5, 1, 2, 3, 5, 6);
         r1.copyOnWrite = copyOnWrite;
         //check optimization
         auto size1 = r1.sizeInBytes;
@@ -264,39 +327,32 @@ unittest
 
     void test_bitmapOf()
     {
-        const r = Roaring.bitmapOf(5, 1, 2, 3, 5, 6);
+        const r = bitmapOf(5, 1, 2, 3, 5, 6);
         assert(r.contains(5));
-        assert(r.cardinality == 5);
-    }
-
-    void test_select()
-    {
-        const r = Roaring.bitmapOf(5, 1, 2, 3, 5, 6);
-        uint el;
-        assert(r.select(3, el));
-        assert(el == 5);
+        assert(r.length == 5);
+        assert(bitmapOf([1, 2, 3, 5, 6]) == r);
     }
 
     void test_minimum_maximum()
     {
-        const r = Roaring.bitmapOf(5, 1, 2, 3, 5, 6);
+        const r = bitmapOf(5, 1, 2, 3, 5, 6);
         assert(r.minimum == 1);
         assert(r.maximum == 6);
 
-        const r2 = Roaring.bitmapOf(100, 0, uint.max);
+        const r2 = bitmapOf(100, 0, uint.max);
         assert(r2.minimum == 0);
         assert(r2.maximum == uint.max);
     }
 
     void test_rank()
     {
-        const r = Roaring.bitmapOf(5, 1, 2, 3, 5, 6);
+        const r = bitmapOf(5, 1, 2, 3, 5, 6);
         assert(r.rank(4) == 3);
     }
 
     void test_toArray()
     {
-        const r = Roaring.bitmapOf(5, 1, 2, 3, 5, 6);
+        const r = bitmapOf(5, 1, 2, 3, 5, 6);
         uint[] a = r.toArray();
         assert(a.length == 5);
     }
@@ -309,57 +365,206 @@ unittest
 
         const r3 = Roaring.fromArray([10]);
         assert(r1 != r3);
+
+        assert(r1 != new Object);
     }
 
     void test_union()
     {
-        const r1 = Roaring.bitmapOf(5, 1, 2, 3, 5, 6);
-        const r2 = Roaring.bitmapOf(6, 7, 8);
-        assert((r1 | r2) == Roaring.bitmapOf(1, 2, 3, 5, 6, 7, 8));
+        const r1 = bitmapOf(5, 1, 2, 3, 5, 6);
+        const r2 = bitmapOf(6, 7, 8);
+        assert((r1 | r2) == bitmapOf(1, 2, 3, 5, 6, 7, 8));
     }
 
     void test_intersect()
     {
-        const r1 = Roaring.bitmapOf(5, 1, 2, 3, 5, 6);
-        const r2 = Roaring.bitmapOf(6, 7, 8);
-        assert((r1 & r2) == Roaring.bitmapOf(6));
+        const r1 = bitmapOf(5, 1, 2, 3, 5, 6);
+        const r2 = bitmapOf(6, 7, 8);
+        assert((r1 & r2) == bitmapOf(6));
     }
 
     void test_write_read()
     {
-        const r1 = Roaring.bitmapOf(5, 1, 2, 3, 5, 6);
-        char[] buf = r1.write();
-        const r2 = Roaring.read(buf);
+        import core.exception : OutOfMemoryError;
+        const r1 = bitmapOf(5, 1, 2, 3, 5, 6);
+        char[] buf = writeBitmap(r1);
+        const r2 = readBitmap(buf);
         assert(r1 == r2);
+        try {
+            buf.length = 0;
+            readBitmap(buf) || assert(false);
+        }
+        catch (OutOfMemoryError e) {
+            // pass
+        }
     }
 
-    void test_subset() {
-        const sub = Roaring.bitmapOf(1, 5);
-        const sup = Roaring.bitmapOf(1, 2, 3, 4, 5, 6);
+    void test_subset()
+    {
+        const sub = bitmapOf(1, 5);
+        const sup = bitmapOf(1, 2, 3, 4, 5, 6);
         assert(sub in sup);
     }
 
-    void test_iterate() {
-        const bitmap = Roaring.bitmapOf(5, 1, 2, 3, 5, 6);
+    void test_iterate()
+    {
+        const bitmap = bitmapOf(5, 1, 2, 3, 5, 6);
         ulong sum;
         foreach (bit; bitmap) {
             sum += bit;
         }
         assert(sum == 17);
     }
+
+    void test_toString()
+    {
+        import std.conv : to;
+        const bitmap = bitmapOf(5, 1, 2, 3, 5, 6);
+        assert("{1, 2, 3, 5, 6}" == to!string(bitmap));
+    }
+
+    void test_index()
+    {
+        import core.exception : RangeError;
+        const bitmap = bitmapOf(5, 1, 2, 3, 5, 6);
+        assert(5 == bitmap[3]);
+        // accessing an index > cardinality(set) throws a RangeError
+        try {
+            bitmap[999] || assert(false);
+        }
+        catch (RangeError e) {
+            // pass
+        }       
+    }
+
+    void test_slice()
+    {
+        import core.exception : RangeError;
+        const bitmap = bitmapOf(5, 1, 2, 3, 5, 6);
+        assert(bitmapOf(3, 5, 6) == bitmap[2..$]);
+    }
+
+    void test_sliceInvalidStart()
+    {
+        import core.exception : RangeError;
+        const bitmap = bitmapOf(5, 1, 2, 3, 5, 6);
+        // accessing an index < 0 throws a RangeError
+        try {
+            bitmap[-1..$] || assert(false);
+        }
+        catch (RangeError e) {
+            // pass
+        }
+    }
     
+    void test_sliceInvalidStart2()
+    {
+        import core.exception : RangeError;
+        const bitmap = bitmapOf(5, 1, 2, 3, 5, 6);
+        // accessing an index > $ throws a RangeError
+        try {
+            bitmap[$..$] || assert(false);
+        }
+        catch (RangeError e) {
+            // pass
+        }
+    }
+
+    void test_readme()
+    {
+        import std.stdio : writefln, writeln;
+        import roaring.roaring : Roaring, bitmapOf;
+
+        // create a new roaring bitmap instance
+        auto r1 = new Roaring;
+
+        // add some bits to the bitmap
+        r1.add(5);
+
+        // create from an array
+        auto ra = bitmapOf([1, 2, 3]);
+        
+        // create a new roaring bitmap instance from some numbers
+        auto r2 = bitmapOf(1, 3, 5, 15);
+        
+        // check whether a value is contained
+        assert(r2.contains(5));
+        assert(5 in r2); // r2 contains 5
+        assert(99 !in r2); // r2 does not contain 99
+
+        // get minimum and maximum values in a bitmap
+        assert(r2.minimum == 1);
+        assert(r2.maximum == 15);
+
+        // remove a value from the bitmap
+        r2.remove(5);
+        assert(!r2.contains(5));
+        
+        // compute how many bits there are:
+        assert(3 == r2.length);
+
+        // check whether a bitmap is subset of another
+        const sub = bitmapOf(1, 5);
+        const sup = bitmapOf(1, 2, 3, 4, 5, 6);
+        assert(sub in sup);
+
+        // iterate on a bitmap
+        const r3 = bitmapOf(1, 5, 10, 20);
+        ulong sum = 0;
+        foreach (bit; r3) {
+            sum += bit;
+        }
+        assert(sum == 36);
+
+        // iterate on a bitmap and index
+        foreach(i, bit; r3) {
+            writefln("%d: %d", i, bit);
+        }
+
+        import roaring.roaring : readBitmap, writeBitmap;
+        // serialize the bitmap
+        char[] buf = writeBitmap(r3);
+        // deserialize from a char array
+        const r3Copy = readBitmap(buf);
+        assert(r3 == r3Copy);
+
+        // find the intersection of bitmaps
+        const r4 = bitmapOf(1, 5, 6);
+        const r5 = bitmapOf(1, 2, 3, 4, 5);
+        assert((r4 & r5) == bitmapOf(1, 5));
+        // find the union of bitmaps
+        assert((r4 | r5) == bitmapOf(1, 2, 3, 4, 5, 6));
+
+        const r6 = bitmapOf(0, 10, 20, 30, 40, 50);
+        // get the bit for the index
+        assert(20 == r6[2]);
+        // slice a bitmap
+        assert(bitmapOf(30, 40, 50) == r6[3..$]);
+
+        // convert the bitmap to a string
+        writeln("Bitmap: ", r6);
+        import std.conv : to;
+        assert("{0, 10, 20, 30, 40, 50}" == to!string(r6));
+    }
+
     test_add_remove();
     test_bitmapOf();
     test_equals();
+    test_index();
     test_intersect();
     test_iterate();
     test_minimum_maximum();
     test_optimize(true);
     test_optimize(false);
     test_rank();
-    test_select();
+    test_slice();
+    test_sliceInvalidStart();
+    test_sliceInvalidStart2();
     test_subset();
     test_toArray();
+    test_toString();
     test_union();
     test_write_read();
+
+    test_readme();
 }
