@@ -1,6 +1,6 @@
 <a href="https://travis-ci.org/yuce/droaring"><img src="https://api.travis-ci.org/yuce/droaring.svg?branch=master"></a>
 
-<img src="https://github.com/yuce/yuce.github.io/blob/master/roaring.jpg" style="float: right" align="right" height="512">
+<img src="https://github.com/yuce/yuce.github.io/blob/master/roaring.jpg" style="float: right" align="right" height="256" width="256">
 
 # Experimental D Roaring Bitmaps Library
 
