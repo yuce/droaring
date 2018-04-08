@@ -171,7 +171,7 @@ size_t roaring_bitmap_size_in_bytes(const roaring_bitmap_t *ra);
  * caller is responsible to ensure that there is enough memory
  * allocated
  * (e.g., ans = malloc(roaring_bitmap_get_cardinality(mybitmap)
- *   * sizeof(uint32_t))
+ *   * sizeof(uint32_t)) )
  */
 void roaring_bitmap_to_uint32_array(const roaring_bitmap_t *ra, uint32_t *ans);
 

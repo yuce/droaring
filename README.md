@@ -13,7 +13,7 @@ This library wraps [CRoaring](https://github.com/RoaringBitmap/CRoaring).
 
 * A recent D compiler. Tested with DMD v2.079.0 and LDC 1.8.0.
 * Requirements for CRoaring (including a C compiler).
-* Tested on Linux, FreeBSD and OSX.
+* Tested on Linux, FreeBSD and MacOS.
 
 ## Install
 
