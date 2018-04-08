@@ -40,7 +40,7 @@ class BitRange
     @nogc @property @safe
     bool empty() const pure
     {
-        return !this.it || !this.it.has_value;
+        return !this.it.has_value;
     }
 
     @nogc @property @safe
@@ -53,10 +53,6 @@ class BitRange
     void popFront()
     {
         if (it.has_value) roaring_advance_uint32_iterator(this.it);
-        else {
-            roaring_free_uint32_iterator(this.it);
-            this.it = null;
-        }
     }
 
     @nogc
