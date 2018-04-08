@@ -1,17 +1,21 @@
 {
-	"name": "roaring",
-	"homepage": "https://github.com/yuce/droaring",
-	"authors": [
-		"Yüce Tekol"
-	],
-	"description": "Roaring Bitmaps for D",
-	"copyright": "Copyright © 2018, Yüce Tekol",
-	"license": "Apache-2.0",
-	"targetType": "sourceLibrary",
-	"targetName": "roaring",
-	"importPaths": ["source"],
-	"sourceFiles-posix": ["ext/roaring.o"],
-	"preBuildCommands-posix": [
-		"cd $PACKAGE_DIR; [ -f ext/roaring.o ] || cc -std=c11 -fPIC -c -o ext/roaring.o ext/roaring.c"
-	]
+    "name": "roaring",
+    "homepage": "https://github.com/yuce/droaring",
+    "authors": [
+        "Yüce Tekol"
+    ],
+    "description": "Roaring Bitmaps for D",
+    "copyright": "Copyright © 2018, Yüce Tekol",
+    "license": "Apache-2.0",
+    "targetType": "sourceLibrary",
+    "targetName": "roaring",
+    "importPaths": ["source"],
+    "sourceFiles-posix": ["ext/roaring.o"],
+    "sourceFiles-windows": ["ext/roaring.obj"],
+    "preBuildCommands-posix": [
+        "cd $PACKAGE_DIR && [ -f ext/roaring.o ] || cc -std=c11 -fPIC -c -o ext/roaring.o ext/roaring.c"
+    ],
+    "preBuildCommands-windows": [
+        "cd $PACKAGE_DIR && cl ext/roaring.c -c /Foext/roaring.obj"
+    ]
 }

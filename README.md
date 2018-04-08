@@ -17,8 +17,8 @@ This library wraps [CRoaring](https://github.com/RoaringBitmap/CRoaring).
 ## Requirements
 
 * A recent D compiler. Tested with DMD v2.079.0, LDC 1.8.0 and v2.068.2_gcc6.
-* Requirements for CRoaring (including a C compiler).
-* Tested on Linux, FreeBSD and MacOS.
+* C compiler with C11 support.
+* Tested on Linux, FreeBSD, MacOS and Windows (only with 64bit).
 
 ## Install
 
@@ -31,7 +31,7 @@ Add `roaring` to your DUB dependencies. E.g.:
     "description": "A minimal D application.",
     "dependencies": {
         "roaring": {
-            "version": "0.1.1"
+            "version": "0.1.5"
         }
     }
 }
