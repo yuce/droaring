@@ -253,7 +253,7 @@ class Roaring
         return r;
     }
 
-    override bool opEquals(const Object b) const
+    override bool opEquals(Object b) const
     {
         import std.stdio : writeln;
         if (this is b) return true;
