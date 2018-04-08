@@ -19,14 +19,25 @@ This library wraps [CRoaring](https://github.com/RoaringBitmap/CRoaring).
 
 ### Using DUB
 
-Add `roaring` to your DUB dependencies.
+Add `roaring` to your DUB dependencies. E.g.:
+```json
+{
+    "name": "roar",
+    "description": "A minimal D application.",
+    "dependencies": {
+        "roaring": {
+            "version": "0.1.1"
+        }
+    }
+}
+```
 
 ### Without DUB
 
 Assuming you've built the library and `$DROARING_HOME` points to the DRoaring directory:
 
 ```
-dmd your_source.d $ROARING_HOME/ext/roaring.o -L-L$DROARING_HOME -L-lroaring -I$DROARING_HOME/source
+dmd your_source.d $DROARING_HOME/ext/roaring.o -L-L$DROARING_HOME -L-lroaring -I$DROARING_HOME/source
 ```
 
 ## Example
