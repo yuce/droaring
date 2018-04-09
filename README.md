@@ -31,7 +31,7 @@ Add `roaring` to your DUB dependencies. E.g.:
     "description": "A minimal D application.",
     "dependencies": {
         "roaring": {
-            "version": "0.1.5"
+            "version": "0.1.7"
         }
     }
 }
@@ -133,11 +133,11 @@ void main()
     // sum of bits in r6 which are bit % 20==0
     assert(60 == r6.range.filter!(b => b % 20 == 0).sum);
 
-	// if your bitmaps have long runs, you can compress them
-	auto r7 = bitmapOf(1000.iota);
-	writeln("size before optimize = ", r7.sizeInBytes);
-	r7.optimize();
-	writeln("size before optimize = ", r7.sizeInBytes);
+    // if your bitmaps have long runs, you can compress them
+    auto r7 = bitmapOf(1000.iota);
+    writeln("size before optimize = ", r7.sizeInBytes);
+    r7.optimize();
+    writeln("size before optimize = ", r7.sizeInBytes);
 }
 ```
 
