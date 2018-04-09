@@ -385,6 +385,7 @@ class Roaring
         assert((r1 ^ r2) == bitmapOf(1, 2, 3, 5, 7, 8));
     }
 
+    @nogc @safe
     bool opBinaryRight(const string op)(const uint x) const
     if (op == "in")
     {

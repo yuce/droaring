@@ -56,24 +56,31 @@ void roaring_bitmap_add_many(roaring_bitmap_t *r, size_t n_args, const uint32_t 
  * responsible for memory management.
  *
  */
+@nogc @safe
 roaring_bitmap_t *roaring_bitmap_and(const roaring_bitmap_t *x1, const roaring_bitmap_t *x2);
 
 /**
  * Computes the union between two bitmaps and returns new bitmap. The caller is
  * responsible for memory management.
  */
+@nogc @safe
 roaring_bitmap_t *roaring_bitmap_or(const roaring_bitmap_t *x1, const roaring_bitmap_t *x2);
 
 /**
  * Computes the symmetric difference (xor) between two bitmaps
  * and returns new bitmap. The caller is responsible for memory management.
  */
+@nogc @safe
 roaring_bitmap_t *roaring_bitmap_xor(const roaring_bitmap_t *x1, const roaring_bitmap_t *x2);
 
 
 @nogc @safe
 bool roaring_bitmap_contains(const roaring_bitmap_t *r, uint32_t val) pure;
+
+@nogc
 roaring_bitmap_t *roaring_bitmap_create();
+
+@nogc
 roaring_bitmap_t *roaring_bitmap_create_with_capacity(uint32_t cap);
 
 /**
