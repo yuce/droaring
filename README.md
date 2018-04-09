@@ -16,7 +16,7 @@ This library wraps [CRoaring](https://github.com/RoaringBitmap/CRoaring).
 
 ## Requirements
 
-* A recent D compiler. Tested with DMD v2.079.0, LDC 1.8.0 and v2.068.2_gcc6.
+* A recent D compiler. Tested with DMD v2.079.0, LDC 1.8.0 and GDC v2.068.2_gcc6.
 * C compiler with C11 support.
 * Tested on Linux, FreeBSD, MacOS and Windows (only with 64bit).
 
@@ -137,7 +137,7 @@ void main()
     auto r7 = bitmapOf(1000.iota);
     writeln("size before optimize = ", r7.sizeInBytes);
     r7.optimize();
-    writeln("size before optimize = ", r7.sizeInBytes);
+    writeln("size after optimize = ", r7.sizeInBytes);
 }
 ```
 
