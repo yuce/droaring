@@ -16,6 +16,6 @@
         "cd $PACKAGE_DIR && [ -f ext/roaring.o ] || cc -std=c11 -fPIC -c -o ext/roaring.o ext/roaring.c"
     ],
     "preBuildCommands-windows": [
-        "cd $PACKAGE_DIR && cl ext/roaring.c -c /Foext/roaring.obj"
+        "if not exist $PACKAGE_DIR/ext/roaring.obj cl $PACKAGE_DIR/ext/roaring.c -c /Foext/roaring.obj"
     ]
 }
