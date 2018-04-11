@@ -15,7 +15,7 @@ This library wraps [CRoaring](https://github.com/RoaringBitmap/CRoaring).
 
 ## Limitations
 
-* Bitmap size is limited to `uint.max`, which is `2^^32 - 1`. This is a limitation of CRoaring. See: https://github.com/RoaringBitmap/CRoaring/issues/1
+* Bitmap size is (*currently*) limited to `uint.max`, which is `2^^32 - 1`. This is a limitation of CRoaring. See: https://github.com/RoaringBitmap/CRoaring/issues/1
 
 ## Requirements
 
