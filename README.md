@@ -13,6 +13,9 @@ Check out [Pilosa](https://www.pilosa.com) for an open source distributed index 
 
 This library wraps [CRoaring](https://github.com/RoaringBitmap/CRoaring).
 
+## Limitations
+
+* Bitmap size is limited to `uint.max`, which is `2^^32 - 1`. This is a limitation of CRoaring. See: https://github.com/RoaringBitmap/CRoaring/issues/1
 
 ## Requirements
 
