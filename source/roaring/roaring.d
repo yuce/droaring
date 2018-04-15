@@ -649,7 +649,7 @@ class Bitmap64
         assert(r2.maximum == ulong.max);
     }    
 
-    @nogc @property @safe
+    @nogc @property
     void copyOnWrite(bool enable)
     {
         if (enable == this.copyOnWrite_) return;
@@ -679,7 +679,7 @@ class Bitmap64
         return lowOf(x) in this.bitmaps[index];
     }
 
-    @nogc @safe
+    @nogc
     bool optimize()
     {
         auto result = false;
@@ -699,7 +699,7 @@ class Bitmap64
         assert(r1.sizeInBytes < size1);
     }    
 
-    @nogc @property @safe
+    @nogc @property
     size_t sizeInBytes() const pure
     {
         size_t result = 0;
