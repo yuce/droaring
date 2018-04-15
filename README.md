@@ -5,8 +5,6 @@
 
 # Experimental D Roaring Bitmaps Library
 
-**EARLY RELEASE**
-
 [Roaring Bitmaps](http://roaringbitmap.org) are compressed bit arrays which can store a huge amount of bits in a space efficient manner. The bitmap is organized so that adding/removing bits is very fast and don't require unpacking the whole bitmap. You can use bit arrays for efficient set operations.
 
 Check out [Pilosa](https://www.pilosa.com) for an open source distributed index which uses roaring bitmaps.
@@ -34,7 +32,7 @@ Add `roaring` to your DUB dependencies. E.g.:
     "description": "A minimal D application.",
     "dependencies": {
         "roaring": {
-            "version": "0.1.7"
+            "version": "0.1.8"
         }
     }
 }
@@ -53,10 +51,10 @@ dmd your_source.d $DROARING_HOME/ext/roaring.o -L-L$DROARING_HOME -L-lroaring -I
 void main()
 {
     import std.stdio : writefln, writeln;
-    import roaring.roaring : Roaring, bitmapOf;
+    import roaring.roaring : Bitmap, bitmapOf;
 
     // create a new roaring bitmap instance
-    auto r1 = new Roaring;
+    auto r1 = new Bitmap;
 
     // add some bits to the bitmap
     r1.add(5);

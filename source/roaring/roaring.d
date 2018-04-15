@@ -3,19 +3,19 @@ module roaring.roaring;
 
 import roaring.c;
 
-Roaring bitmapOf(const uint[] args ...)
+Bitmap bitmapOf(const uint[] args ...)
 {
-    return Roaring.fromArray(args);
+    return Bitmap.fromArray(args);
 }
 
-Roaring bitmapOf(const uint[] bits)
+Bitmap bitmapOf(const uint[] bits)
 {
-    return Roaring.fromArray(bits);
+    return Bitmap.fromArray(bits);
 }
 
-Roaring bitmapOf(T)(T rng)
+Bitmap bitmapOf(T)(T rng)
 {
-    auto r = new Roaring;
+    auto r = new Bitmap;
     foreach (bit; rng) r.add(bit);
     return r;
 }
@@ -31,12 +31,12 @@ unittest
     assert((r1 == r2) && (r1 == r3));
 }
 
-Roaring readBitmap(const char[] buf)
+Bitmap readBitmap(const char[] buf)
 {
-    return Roaring.read(buf);
+    return Bitmap.read(buf);
 }
 
-char[] writeBitmap(const Roaring r)
+char[] writeBitmap(const Bitmap r)
 {
     return r.write();
 }
@@ -57,7 +57,7 @@ unittest
     }
 }
 
-BitRange range(const Roaring r)
+BitRange range(const Bitmap r)
 {
     return new BitRange(r.bitmap);
 }
@@ -105,7 +105,7 @@ unittest
 
 
 
-class Roaring
+class Bitmap
 {
     /// Creates an empty bitmap
     this()
@@ -133,27 +133,27 @@ class Roaring
         this.bitmap = r;
     }
 
-    private static Roaring fromArray(const uint[] bits)
+    private static Bitmap fromArray(const uint[] bits)
     {
-        Roaring r = new Roaring(cast(uint)bits.length);
+        Bitmap r = new Bitmap(cast(uint)bits.length);
         roaring_bitmap_add_many(r.bitmap, bits.length, bits.ptr);
         return r;
     }
 
-    private static Roaring fromRange(const ulong min, const ulong max, const uint step)
+    private static Bitmap fromRange(const ulong min, const ulong max, const uint step)
     {
         auto rr = roaring_bitmap_from_range(min, max, step);
-        return new Roaring(rr);
+        return new Bitmap(rr);
     }
 
-    private static Roaring read(const char[] buf)
+    private static Bitmap read(const char[] buf)
     {
         import core.exception : OutOfMemoryError;
         auto rr = roaring_bitmap_portable_deserialize_safe(buf.ptr, buf.length);
         if (!rr) {
             throw new OutOfMemoryError;
         }
-        return new Roaring(rr);
+        return new Bitmap(rr);
     }
 
     private char[] write() const
@@ -183,7 +183,7 @@ class Roaring
 
     unittest
     {
-        Roaring r = new Roaring;
+        Bitmap r = new Bitmap;
         r.copyOnWrite = true;
         assert(r.copyOnWrite == true);
     }
@@ -210,7 +210,7 @@ class Roaring
 
     unittest
     {
-        Roaring r = new Roaring;
+        Bitmap r = new Bitmap;
         r.add(5);
         assert(5 in r);
     }
@@ -227,7 +227,7 @@ class Roaring
 
     unittest
     {
-        Roaring r = bitmapOf(5);
+        Bitmap r = bitmapOf(5);
         r.remove(5);
         assert(5 !in r);
     }
@@ -364,7 +364,7 @@ class Roaring
         assert(iSum == 10);
     }
 
-    Roaring opBinary(const string op)(const Roaring b) const
+    Bitmap opBinary(const string op)(const Bitmap b) const
     if (op == "&" || op == "|" || op == "^")
     {
         roaring_bitmap_t *result;
@@ -373,7 +373,7 @@ class Roaring
         else static if (op == "^") result = roaring_bitmap_xor(this.bitmap, b.bitmap);
         else static assert(0, "Operator " ~ op ~ " not implemented.");
         
-        return new Roaring(result);
+        return new Bitmap(result);
     }
 
     unittest
@@ -396,11 +396,11 @@ class Roaring
     unittest
     {
         import std.range : iota;
-        Roaring r1 = bitmapOf(iota(100, 1000));
+        Bitmap r1 = bitmapOf(iota(100, 1000));
         assert(500 in r1);
     }
 
-    bool opBinaryRight(const string op)(const Roaring b) const
+    bool opBinaryRight(const string op)(const Bitmap b) const
     if (op == "in")
     {
         static if (op == "in") return roaring_bitmap_is_subset(b.bitmap, this.bitmap);
@@ -410,8 +410,8 @@ class Roaring
     unittest
     {
         import std.range : iota;
-        Roaring r1 = bitmapOf(iota(100, 1000));
-        Roaring r2 = bitmapOf(iota(200, 400));
+        Bitmap r1 = bitmapOf(iota(100, 1000));
+        Bitmap r2 = bitmapOf(iota(200, 400));
         assert(r2 in r1);
     }
 
@@ -439,13 +439,13 @@ class Roaring
         }
     }
 
-    Roaring opSlice(int start, int end) const
+    Bitmap opSlice(int start, int end) const
     {
         import core.exception : RangeError;
         if (start < 0 || start >= opDollar) {
             throw new RangeError;
         }
-        Roaring r = new Roaring;
+        Bitmap r = new Bitmap;
         foreach (i, bit; this) {
             if (i < start) continue;
             if (i >= end) break;
@@ -491,18 +491,18 @@ class Roaring
         if (this is b) return true;
         if (b is null) return false;
         if (typeid(this) == typeid(b)) {
-            return roaring_bitmap_equals(this.bitmap, (cast(Roaring)b).bitmap);
+            return roaring_bitmap_equals(this.bitmap, (cast(Bitmap)b).bitmap);
         }
         return false;
     }
 
     unittest
     {
-        const r1 = Roaring.fromRange(10, 20, 3);
-        const r2 = Roaring.fromArray([10, 13, 16, 19]);
+        const r1 = Bitmap.fromRange(10, 20, 3);
+        const r2 = Bitmap.fromArray([10, 13, 16, 19]);
         assert(r1 == r2);
 
-        const r3 = Roaring.fromArray([10]);
+        const r3 = Bitmap.fromArray([10]);
         assert(r1 != r3);
 
         assert(r1 != new Object);
@@ -517,7 +517,7 @@ class Roaring
 
     unittest
     {
-        Roaring r1 = new Roaring;
+        Bitmap r1 = new Bitmap;
         r1 |= 500;
         assert(500 in r1);
     }
@@ -547,10 +547,10 @@ class Roaring
 unittest
 {
     import std.stdio : writefln, writeln;
-    import roaring.roaring : Roaring, bitmapOf;
+    import roaring.roaring : Bitmap, bitmapOf;
 
     // create a new roaring bitmap instance
-    auto r1 = new Roaring;
+    auto r1 = new Bitmap;
 
     // add some bits to the bitmap
     r1.add(5);
