@@ -588,14 +588,9 @@ private ulong valueOf(const uint index, const uint low) pure
 
 unittest
 {
-    import std.stdio : writeln;
     ulong x = cast(ulong)uint.max + 2;
-    writeln("x = ", x);
-    writeln("index(x) = ", indexOf(x));
-    writeln("lowOf(x) = ", lowOf(x));
-    writeln("valueOf(x) = ", valueOf(indexOf(x), lowOf(x)));
-    // assert(indexOf(x) == 1);
-    // assert(lowOf(x) == 1);
+    assert(indexOf(x) == 1);
+    assert(lowOf(x) == 1);
     assert(valueOf(indexOf(x), lowOf(x)) == x);
 }
 
