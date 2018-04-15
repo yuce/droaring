@@ -602,7 +602,7 @@ unittest
 
 class Bitmap64
 {
-    @nogc @property @safe
+    @nogc @property
     ulong length() const pure
     {
         ulong result = 0;
