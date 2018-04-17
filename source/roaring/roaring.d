@@ -476,11 +476,7 @@ class Bitmap
         return r;
     }
 
-    @nogc @property @safe
-    uint opDollar() const pure
-    {
-        return length;
-    }
+    alias opDollar = length;
 
     unittest
     {
