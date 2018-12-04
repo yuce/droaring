@@ -539,7 +539,23 @@ class Bitmap
         import std.conv : to;
         const bitmap = bitmapOf(5, 1, 2, 3, 5, 6);
         assert("{1, 2, 3, 5, 6}" == to!string(bitmap));
-    }    
+    }
+
+    Bitmap dup() const @property
+    {
+        return new Bitmap(roaring_bitmap_copy(bitmap));
+    }
+
+    unittest
+    {
+        const original = bitmapOf(1, 2, 3, 4);
+        auto copy = original.dup;
+
+        // Copy is editable whereas original is const
+        copy.add(5);
+        assert(5 !in original);
+        assert(5 in copy);
+    }
 
     private roaring_bitmap_t* bitmap;
 }
@@ -635,4 +651,8 @@ unittest
     writeln("size before optimize = ", r7.sizeInBytes);
     r7.optimize();
     writeln("size after optimize = ", r7.sizeInBytes);
+
+    // copy a bitmap (uses copy-on-write under the hood)
+    const r8 = r7.dup;
+    assert(r8 == r7);
 }
