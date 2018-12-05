@@ -385,6 +385,32 @@ class Bitmap
         assert((r1 ^ r2) == bitmapOf(1, 2, 3, 5, 7, 8));
     }
 
+    @nogc
+    void opOpAssign(const string op)(const Bitmap b)
+    if (op == "&" || op == "|" || op == "^")
+    {
+        static if (op == "&") roaring_bitmap_and_inplace(this.bitmap, b.bitmap);
+        else static if (op == "|") roaring_bitmap_or_inplace(this.bitmap, b.bitmap);
+        else static if (op == "^") roaring_bitmap_xor_inplace(this.bitmap, b.bitmap);
+        else static assert(0, "Operator " ~ op ~ " not implemented.");
+    }
+
+    unittest
+    {
+        auto r1 = bitmapOf(5, 1, 2, 3, 5, 6);
+        const r2 = bitmapOf(6, 7, 8);
+        r1 |= r2;
+        assert(r1 == bitmapOf(1, 2, 3, 5, 6, 7, 8));
+
+        r1 = bitmapOf(5, 1, 2, 3, 5, 6);
+        r1 &= r2;
+        assert(r1 == bitmapOf(6));
+
+        r1 = bitmapOf(5, 1, 2, 3, 5, 6);
+        r1 ^= r2;
+        assert(r1 == bitmapOf(1, 2, 3, 5, 7, 8));
+    }
+
     @nogc @safe
     bool opBinaryRight(const string op)(const uint x) const
     if (op == "in")
