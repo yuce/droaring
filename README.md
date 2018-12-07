@@ -139,6 +139,10 @@ void main()
     writeln("size before optimize = ", r7.sizeInBytes);
     r7.optimize();
     writeln("size after optimize = ", r7.sizeInBytes);
+    
+    // copy a bitmap (uses copy-on-write under the hood)
+    const r8 = r7.dup;
+    assert(r8 == r7);
 }
 ```
 

@@ -233,3 +233,13 @@ roaring_uint32_iterator_t *roaring_create_iterator(const roaring_bitmap_t *ra);
 */
 @nogc
 void roaring_free_uint32_iterator(roaring_uint32_iterator_t *it);
+
+
+/**
+* Copies a  bitmap. This does memory allocation. The caller is responsible for
+* memory management.
+*
+*/
+@nogc
+roaring_bitmap_t *roaring_bitmap_copy(const roaring_bitmap_t *r);
+
