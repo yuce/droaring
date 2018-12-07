@@ -15,4 +15,4 @@ clean:
 
 test:
 	dub test --compiler=$(DMD) --coverage && \
-	tail -1 source-roaring.lst
+	tail -1 source-roaring-roaring.lst
