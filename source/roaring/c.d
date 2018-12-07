@@ -60,11 +60,27 @@ void roaring_bitmap_add_many(roaring_bitmap_t *r, size_t n_args, const uint32_t 
 roaring_bitmap_t *roaring_bitmap_and(const roaring_bitmap_t *x1, const roaring_bitmap_t *x2);
 
 /**
+ * Inplace version modifies x1, x1 == x2 is allowed
+ */
+@nogc @safe
+void roaring_bitmap_and_inplace(roaring_bitmap_t *x1,
+                                const roaring_bitmap_t *x2);
+
+/**
  * Computes the union between two bitmaps and returns new bitmap. The caller is
  * responsible for memory management.
  */
 @nogc @safe
 roaring_bitmap_t *roaring_bitmap_or(const roaring_bitmap_t *x1, const roaring_bitmap_t *x2);
+
+/**
+ * Inplace version of roaring_bitmap_or, modifies x1. TDOO: decide whether x1 ==
+ *x2 ok
+ *
+ */
+@nogc @safe
+void roaring_bitmap_or_inplace(roaring_bitmap_t *x1,
+                               const roaring_bitmap_t *x2);
 
 /**
  * Computes the symmetric difference (xor) between two bitmaps
@@ -73,6 +89,13 @@ roaring_bitmap_t *roaring_bitmap_or(const roaring_bitmap_t *x1, const roaring_bi
 @nogc @safe
 roaring_bitmap_t *roaring_bitmap_xor(const roaring_bitmap_t *x1, const roaring_bitmap_t *x2);
 
+/**
+ * Inplace version of roaring_bitmap_xor, modifies x1. x1 != x2.
+ *
+ */
+@nogc @safe
+void roaring_bitmap_xor_inplace(roaring_bitmap_t *x1,
+                                const roaring_bitmap_t *x2);
 
 @nogc @safe
 bool roaring_bitmap_contains(const roaring_bitmap_t *r, uint32_t val) pure;
