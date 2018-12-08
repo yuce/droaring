@@ -96,6 +96,20 @@ roaring_bitmap_t *roaring_bitmap_xor(const roaring_bitmap_t *x1, const roaring_b
 @nogc @safe
 void roaring_bitmap_xor_inplace(roaring_bitmap_t *x1,
                                 const roaring_bitmap_t *x2);
+/**
+ * Computes the  difference (andnot) between two bitmaps
+ * and returns new bitmap. The caller is responsible for memory management.
+ */
+roaring_bitmap_t *roaring_bitmap_andnot(const roaring_bitmap_t *x1,
+                                        const roaring_bitmap_t *x2);
+
+/**
+ * Inplace version of roaring_bitmap_andnot, modifies x1. x1 != x2.
+ *
+ */
+void roaring_bitmap_andnot_inplace(roaring_bitmap_t *x1,
+                                   const roaring_bitmap_t *x2);
+
 
 @nogc @safe
 bool roaring_bitmap_contains(const roaring_bitmap_t *r, uint32_t val) pure;

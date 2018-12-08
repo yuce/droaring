@@ -411,6 +411,37 @@ class Bitmap
         assert(r1 == bitmapOf(1, 2, 3, 5, 7, 8));
     }
 
+    /**
+     * Computes the difference of this bitmap and `b`; that is returns the
+     *  elements of `this` that are not in `b`.
+     */
+    Bitmap andNot(const Bitmap b) const
+    {
+        return new Bitmap(roaring_bitmap_andnot(bitmap, b.bitmap));
+    }
+    unittest
+    {
+        const a = bitmapOf(1, 2, 4, 5);
+        const b = bitmapOf(2, 3, 5);
+        assert(a.andNot(b) == bitmapOf(1, 4));
+        assert(b.andNot(a) == bitmapOf(3));
+    }
+
+    /**
+     * Performs the andNot operation in place.
+     */
+    void andNotInPlace(const Bitmap b)
+    {
+        roaring_bitmap_andnot_inplace(bitmap, b.bitmap);
+    }
+    unittest
+    {
+        auto a = bitmapOf(1, 2, 4, 5);
+        const b = bitmapOf(2, 3, 5);
+        a.andNotInPlace(b);
+        assert(a == bitmapOf(1, 4));
+    }
+
     @nogc @safe
     bool opBinaryRight(const string op)(const uint x) const
     if (op == "in")
