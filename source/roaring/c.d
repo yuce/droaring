@@ -23,8 +23,6 @@ struct roaring_uint32_iterator_t {
     int32_t in_container_index;  // for bitset and array container, this is out
                                  // index
     int32_t run_index;           // for run container, this points  at the run
-    uint32_t in_run_index;  // within a run, this is our index (points at the
-                            // end of the current run)
 
     uint32_t current_value;
     bool has_value;
