@@ -11,6 +11,18 @@ Check out [Pilosa](https://www.pilosa.com) for an open source distributed index 
 
 This library wraps [CRoaring](https://github.com/RoaringBitmap/CRoaring).
 
+Thanks to all [Contributors](CONTRIBUTORS.md).
+
+## News
+
+* Version *0.2.0* (2018-12-08)
+    * `Bitmap.dup` property and `Bitmap.andNot` method by [Justin Whear](https://github.com/jwhear)
+    * More `Bitmap.opOpAssign` overloads by [Justin Whear](https://github.com/jwhear)
+    * Updated to [CRoaring](https://github.com/RoaringBitmap/CRoaring) 0.2.58 by [Justin Whear](https://github.com/jwhear)
+
+* Version *0.1.0* (2018-04-08)
+    * Initial version
+
 ## Limitations
 
 * Bitmap size is (*currently*) limited to `uint.max`, which is `2^^32 - 1`. This is a limitation of CRoaring. See: https://github.com/RoaringBitmap/CRoaring/issues/1
@@ -32,7 +44,7 @@ Add `roaring` to your DUB dependencies. E.g.:
     "description": "A minimal D application.",
     "dependencies": {
         "roaring": {
-            "version": "0.1.8"
+            "version": "0.2.0"
         }
     }
 }
@@ -65,7 +77,7 @@ void main()
     // create from a range
     import std.range : iota;
     assert(bitmapOf(0, 1, 2, 3) == bitmapOf(4.iota));
-    
+
     // create a new roaring bitmap instance from some numbers
     auto r2 = bitmapOf(1, 3, 5, 15);
 
@@ -81,7 +93,7 @@ void main()
     // remove a value from the bitmap
     r2.remove(5);
     assert(!r2.contains(5));
-    
+
     // compute how many bits there are:
     assert(3 == r2.length);
 
@@ -139,7 +151,7 @@ void main()
     writeln("size before optimize = ", r7.sizeInBytes);
     r7.optimize();
     writeln("size after optimize = ", r7.sizeInBytes);
-    
+
     // copy a bitmap (uses copy-on-write under the hood)
     const r8 = r7.dup;
     assert(r8 == r7);
