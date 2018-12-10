@@ -49,6 +49,25 @@ void roaring_bitmap_add(roaring_bitmap_t *r, uint32_t x);
 void roaring_bitmap_add_many(roaring_bitmap_t *r, size_t n_args, const uint32_t *vals);
 
 /**
+ * Add value x
+ * Returns true if a new value was added, false if the value was already existing.
+ */
+@nogc @safe
+bool roaring_bitmap_add_checked(roaring_bitmap_t *r, uint32_t x);
+
+/**
+ * Add all values in range [min, max]
+ */
+@nogc @safe
+void roaring_bitmap_add_range_closed(roaring_bitmap_t *ra, uint32_t min, uint32_t max);
+
+/**
+ * Add all values in range [min, max)
+ */
+@nogc @safe
+void roaring_bitmap_add_range(roaring_bitmap_t *ra, uint64_t min, uint64_t max);
+
+/**
  * Computes the intersection between two bitmaps and returns new bitmap. The
  * caller is
  * responsible for memory management.
@@ -97,6 +116,13 @@ void roaring_bitmap_xor_inplace(roaring_bitmap_t *x1,
 
 @nogc @safe
 bool roaring_bitmap_contains(const roaring_bitmap_t *r, uint32_t val) pure;
+
+/**
+ * Check whether a range of values from range_start (included) to range_end (excluded) is present
+ */
+@nogc @safe
+bool roaring_bitmap_contains_range(const roaring_bitmap_t *r, uint64_t range_start, uint64_t range_end) pure;
+
 
 @nogc
 roaring_bitmap_t *roaring_bitmap_create();
@@ -156,6 +182,13 @@ roaring_bitmap_t *roaring_bitmap_from_range(uint64_t min, uint64_t max, uint32_t
 
 @nogc @safe
 uint64_t roaring_bitmap_get_cardinality(const roaring_bitmap_t *ra) pure;
+
+/**
+ * Returns number of elements in range [range_start, range_end).
+ */
+@nogc @safe
+uint64_t roaring_bitmap_range_cardinality(const roaring_bitmap_t *ra,
+                                          uint64_t range_start, uint64_t range_end) pure;
 
 @nogc @safe
 uint32_t roaring_bitmap_maximum(const roaring_bitmap_t *bm) pure;
