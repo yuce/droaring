@@ -15,6 +15,9 @@ Thanks to all [Contributors](CONTRIBUTORS.md).
 
 ## News
 
+* Version *0.2.1* (2018-12-15)
+    * `Bitmap.addRange`, `containsRange`, `lengthInRange` methods by [Justin Whear](https://github.com/jwhear).
+
 * Version *0.2.0* (2018-12-08)
     * `Bitmap.dup` property and `Bitmap.andNot` method by [Justin Whear](https://github.com/jwhear)
     * More `Bitmap.opOpAssign` overloads by [Justin Whear](https://github.com/jwhear)
