@@ -216,6 +216,22 @@ class Bitmap
     }
 
     /**
+     * Adds all values from `min` (included) to `max` (excluded)
+     */
+    @nogc @safe
+    void addRange(const ulong min, const ulong max)
+    {
+        roaring_bitmap_add_range(this.bitmap, min, max);
+    }
+    unittest
+    {
+        import std.range : iota;
+        Bitmap r = new Bitmap;
+        r.addRange(0, 10);
+        assert(r == bitmapOf(iota(0, 10)));
+    }
+
+    /**
      * Remove value x
      *
      */
@@ -239,6 +255,37 @@ class Bitmap
     bool contains(const uint x) const pure
     {
         return roaring_bitmap_contains(this.bitmap, x);
+    }
+
+    /**
+     * Check if all values from start (included) to end (excluded) are present
+     */
+    @nogc @safe
+    bool containsRange(const uint start, const uint end) const pure
+    {
+        return roaring_bitmap_contains_range(this.bitmap, start, end);
+    }
+    unittest
+    {
+        const r1 = bitmapOf(1, 2, 3, 4, 6, 7, 8);
+        assert(r1.containsRange(2, 5));
+        assert(!r1.containsRange(2, 6));
+    }
+
+    /**
+     * Returns the number of elements present between `start` (included) and `end` (excluded)
+     */
+    @nogc @safe
+    ulong lengthInRange(const ulong start, const ulong end) const pure
+    {
+        return roaring_bitmap_range_cardinality(this.bitmap, start, end);
+    }
+    unittest
+    {
+        const r1 = bitmapOf(1, 2, 3, 4, 5);
+        assert(r1.lengthInRange(2, 5) == 3);
+        assert(r1.lengthInRange(2, 6) == 4);
+        assert(r1.lengthInRange(2, 7) == 4);
     }
 
     /**
