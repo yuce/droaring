@@ -5,11 +5,13 @@ import roaring.c;
 
 Bitmap bitmapOf(const uint[] args ...)
 {
+    pragma(inline, true);
     return Bitmap.fromArray(args);
 }
 
 Bitmap bitmapOf(const uint[] bits)
 {
+    pragma(inline, true);
     return Bitmap.fromArray(bits);
 }
 
@@ -29,6 +31,26 @@ unittest
     const r3 = bitmapOf(5.iota);
     assert("{0, 1, 2, 3, 4}" == to!string(r1));
     assert((r1 == r2) && (r1 == r3));
+}
+
+Bitmap64 bitmap64Of(const ulong[] args...)
+{
+    pragma(inline, true);
+    return bitmap64Of(args);
+}
+
+Bitmap64 bitmap64Of(const ulong[] args)
+{
+    auto b = new Bitmap64;
+    foreach (arg; args) b.add(arg);
+    return b;
+}
+
+unittest
+{
+    const b = bitmap64Of(1, 2, 3);
+    assert(b.length == 3);
+    assert(bitmap64Of(1, 2^^40) == bitmap64Of([1, 2^^40]));
 }
 
 Bitmap readBitmap(const char[] buf)
@@ -170,7 +192,7 @@ class Bitmap
     }
 
     @nogc @property @safe
-    void copyOnWrite(bool enable) pure
+    void copyOnWrite(bool enable)
     {
         this.bitmap.copy_on_write = enable;
     }
@@ -558,11 +580,7 @@ class Bitmap
         return r;
     }
 
-    @nogc @property @safe
-    uint opDollar() const pure
-    {
-        return length;
-    }
+    alias opDollar = length;
 
     unittest
     {
@@ -591,7 +609,6 @@ class Bitmap
 
     override bool opEquals(Object b) const
     {
-        import std.stdio : writeln;
         if (this is b) return true;
         if (b is null) return false;
         if (typeid(this) == typeid(b)) {
@@ -662,6 +679,200 @@ class Bitmap
     }
 
     private roaring_bitmap_t* bitmap;
+}
+
+@nogc @safe
+private uint indexOf(const ulong x) pure
+{
+    pragma(inline, true);
+    return cast(uint)(x >> 32);
+}
+
+@nogc @safe
+private uint lowOf(const ulong x) pure
+{
+    pragma(inline, true);
+    return cast(uint)x;
+}
+
+@nogc @safe
+private ulong valueOf(const uint index, const uint low) pure
+{
+    pragma(inline, true);
+    return (cast(ulong)index << 32) + low;
+}
+
+unittest
+{
+    ulong x = cast(ulong)uint.max + 2;
+    assert(indexOf(x) == 1);
+    assert(lowOf(x) == 1);
+    assert(valueOf(indexOf(x), lowOf(x)) == x);
+}
+
+
+class Bitmap64
+{
+    @nogc @property
+    ulong length() const pure
+    {
+        ulong result = 0;
+        foreach (bmp; this.bitmaps.byValue) {
+            result += bmp.length;
+        }
+        return result;
+    }
+
+    /**
+     * Return the largest value (if not empty)
+     *
+     */
+    @nogc @property @safe
+    ulong maximum() const pure
+    {
+        ulong result = 0;
+        foreach (index, bmp; this.bitmaps) {
+            const m = valueOf(index, bmp.maximum);
+            if (m > result) result = m;
+        }
+        return  result;
+    }
+
+    /**
+    * Return the smallest value (if not empty)
+    *
+    */
+    @nogc @property @safe
+    ulong minimum() const pure
+    {
+        ulong result = ulong.max;
+        foreach (index, bmp; this.bitmaps) {
+            const m = valueOf(index, bmp.minimum);
+            if (m < result) result = m;
+        }
+        return  result;
+    }
+
+    unittest
+    {
+        const r2 = bitmap64Of(100, ulong.max);
+        assert(r2.minimum == 100);
+        assert(r2.maximum == ulong.max);
+    }    
+
+    @nogc @property
+    void copyOnWrite(bool enable)
+    {
+        if (enable == this.copyOnWrite_) return;
+        this.copyOnWrite_ = enable;
+        foreach (bmp; this.bitmaps.byValue) {
+            bmp.bitmap.copy_on_write = enable;
+        }
+    }
+
+    @nogc @property @safe
+    bool copyOnWrite() const
+    {
+        return this.copyOnWrite_;
+    }    
+
+    void add(const ulong x)
+    {
+        ensureBitmap(indexOf(x)).add(lowOf(x));
+    }
+
+    bool contains(const ulong x) const
+    {
+        const index = indexOf(x);
+        if (index !in this.bitmaps) {
+            return false;
+        }
+        return lowOf(x) in this.bitmaps[index];
+    }
+
+    @nogc
+    bool optimize()
+    {
+        auto result = false;
+        foreach (bmp; this.bitmaps.byValue) {
+            result |= bmp.optimize;
+        }
+        return result;
+    }
+
+    unittest
+    {
+        auto r1 = bitmap64Of(5, 1, 2, 3, 5, 6);
+        r1.copyOnWrite = true;
+        //check optimization
+        auto size1 = r1.sizeInBytes;
+        r1.optimize;
+        assert(r1.sizeInBytes < size1);
+    }    
+
+    @nogc @property
+    size_t sizeInBytes() const pure
+    {
+        size_t result = 0;
+        foreach (bmp; this.bitmaps.byValue) {
+            result += bmp.sizeInBytes;
+        }
+        return result;
+    }
+
+    unittest
+    {
+        assert(bitmap64Of(5).sizeInBytes == bitmapOf(5).sizeInBytes);
+        assert(bitmap64Of(5, 2^^40).sizeInBytes > bitmapOf(5).sizeInBytes);
+    }
+
+    @safe
+    bool opBinaryRight(const string op)(const long x) const
+    if (op == "in")
+    {
+        static if (op == "in") {
+           const index = indexOf(x);
+            if (index !in this.bitmaps) {
+                return false;
+            }            
+            return lowOf(x) in this.bitmaps[index];
+        }
+        else static assert(0, "Operator " ~ op ~ " not implemented.");
+    }
+
+    override bool opEquals(Object b) const
+    {
+        if (this is b) return true;
+        if (b is null) return false;
+        if (typeid(this) == typeid(b)) {
+            const cb = cast(Bitmap64)b;
+            return this.bitmaps == cb.bitmaps;
+        }
+        return false;
+    }    
+
+    private Bitmap ensureBitmap(const uint index)
+    {
+        if (index !in this.bitmaps) {
+            auto bmp = new Bitmap;
+            bmp.copyOnWrite = this.copyOnWrite;
+            this.bitmaps[index] = bmp;
+            return bmp;
+        }
+        return this.bitmaps[index];
+    }
+    
+    private Bitmap[uint] bitmaps;
+    private bool copyOnWrite_ = false;
+}
+
+unittest
+{
+    auto b = new Bitmap64;
+    b.add(2^^40);
+    assert(2^^40 in b);
+    b.add(5);
+    assert(b.length == 2);
 }
 
 unittest
